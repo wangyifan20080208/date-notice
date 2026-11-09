@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">日程助手</string>
+    <string name="channel_reminder_name">日程提醒</string>
+    <string name="channel_reminder_desc">到点提醒你处理群消息里提到的事项</string>
+    <string name="notif_action_missing_time">补充时间</string>
+    <string name="notif_action_open">查看</string>
+    <string name="notif_action_complete">标记完成</string>
+</resources>
