@@ -1,5 +1,7 @@
 # 智能群消息日程助手（SmartGroupAgenda）
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
 > 把微信 / QQ 群里的通知，变成手机上准时响起的日程提醒。  
 > 纯本地运行，群消息、日程与 API Key 都不离开手机。
 
@@ -543,7 +545,25 @@ API Key 会先用 Android Keystore 加密，再写入本机 DataStore。
 
 ---
 
-## 十三、许可与说明
+## 十三、许可证
 
-本项目为个人学习 / 课程实践项目，未声明开源许可证。  
+本项目采用 **GNU General Public License v3.0 or later（GPL-3.0-or-later）**。
+
+Copyright (C) 2026 269009013
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+完整许可证文本见 [LICENSE](LICENSE)。
+
 仓库中的截图仅用于展示界面，不包含真实 API Key 或个人日程数据。
