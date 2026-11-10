@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +35,7 @@ fun ImportStatusBar(
     jobs: List<ImportJob>,
     onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
+    onDismiss: (() -> Unit)? = null,
 ) {
     if (jobs.isEmpty()) return
 
@@ -108,6 +111,19 @@ fun ImportStatusBar(
                 tint = Color(0xFF8B8E92),
                 modifier = Modifier.size(20.dp),
             )
+            if (onDismiss != null && active == 0) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "收起解析状态",
+                        tint = extras.textTertiary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
     }
 }

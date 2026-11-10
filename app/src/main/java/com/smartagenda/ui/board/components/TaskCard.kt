@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Checkbox
@@ -44,6 +45,7 @@ fun TaskCard(
     onToggleDone: (Boolean) -> Unit,
     onRestore: () -> Unit,
     modifier: Modifier = Modifier,
+    onPickTime: (() -> Unit)? = null,
 ) {
     val extras = LocalAgendaColors.current
     val highlightMissing = mode == BoardTab.PENDING && (task.isTimeMissing || task.datetime == null)
@@ -96,7 +98,12 @@ fun TaskCard(
                     Spacer(Modifier.width(2.dp))
                 }
 
-                TimeBlock(task = task, highlight = highlightMissing, overdue = overdue)
+                TimeBlock(
+                    task = task,
+                    highlight = highlightMissing,
+                    overdue = overdue,
+                    onPickTime = onPickTime,
+                )
 
                 Spacer(Modifier.width(12.dp))
 
@@ -140,6 +147,15 @@ fun TaskCard(
                     }
                 }
 
+                if (mode == BoardTab.DONE) {
+                    Text(
+                        text = TimeFormatter.formatDoneStamp(task.updatedAt, now),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = extras.textTertiary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+
                 if (mode == BoardTab.DELETED) {
                     TextButton(
                         onClick = onRestore,
@@ -154,7 +170,7 @@ fun TaskCard(
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
-                } else {
+                } else if (mode != BoardTab.DONE) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
@@ -170,12 +186,27 @@ fun TaskCard(
 }
 
 @Composable
-private fun TimeBlock(task: TaskEntity, highlight: Boolean, overdue: Boolean) {
+private fun TimeBlock(
+    task: TaskEntity,
+    highlight: Boolean,
+    overdue: Boolean,
+    onPickTime: (() -> Unit)?,
+) {
     val extras = LocalAgendaColors.current
 
     if (task.datetime == null) {
+        val pickable = if (onPickTime != null) {
+            Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(onClick = onPickTime)
+        } else {
+            Modifier
+        }
         Column(
-            modifier = Modifier.widthIn(min = 46.dp),
+            modifier = Modifier
+                .width(52.dp)
+                .then(pickable)
+                .padding(vertical = 2.dp),
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
@@ -183,30 +214,36 @@ private fun TimeBlock(task: TaskEntity, highlight: Boolean, overdue: Boolean) {
                 style = MaterialTheme.typography.titleMedium,
                 color = if (highlight) extras.amber else extras.textTertiary,
             )
-            if (highlight) {
-                Text(
-                    text = "需补充",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = extras.textTertiary,
-                )
-            }
+            Text(
+                text = if (highlight) "点此补充" else "需补充",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (onPickTime != null) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    extras.textTertiary
+                },
+            )
         }
         return
     }
 
     Column(
-        modifier = Modifier.widthIn(min = 46.dp),
+        modifier = Modifier.width(52.dp),
         horizontalAlignment = Alignment.Start,
     ) {
         Text(
             text = TimeFormatter.formatTime(task.datetime),
             style = MaterialTheme.typography.titleLarge,
-            color = if (overdue) extras.textTertiary else MaterialTheme.colorScheme.onSurface,
+            color = when {
+                overdue -> extras.amber
+                else -> MaterialTheme.colorScheme.onSurface
+            },
         )
         Text(
-            text = TimeFormatter.formatDate(task.datetime).substringBefore(' '),
+            text = TimeFormatter.formatCardDate(task.datetime),
             style = MaterialTheme.typography.labelSmall,
             color = extras.textTertiary,
+            maxLines = 1,
         )
     }
 }

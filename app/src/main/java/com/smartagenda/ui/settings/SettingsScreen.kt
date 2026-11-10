@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.smartagenda.AppContainer
+import com.smartagenda.BuildConfig
 import com.smartagenda.data.prefs.AiProvider
 import com.smartagenda.ingest.NotificationAccess
 import com.smartagenda.reminder.ExactAlarmPermission
@@ -77,6 +79,7 @@ private fun SettingsScreen(
 ) {
     val extras = LocalAgendaColors.current
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     var notificationAccess by remember { mutableStateOf(NotificationAccess.isGranted(context)) }
     var postNotifications by remember { mutableStateOf(NotificationAccess.hasPostPermission(context)) }
@@ -331,6 +334,42 @@ private fun SettingsScreen(
                             modifier = Modifier.padding(end = 6.dp, bottom = 6.dp),
                         )
                     }
+                }
+            }
+        }
+
+        item {
+            SettingsSection(title = "关于") {
+                Text(
+                    text = "智能群消息日程助手 ${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "群消息只在本机解析与保存，日程与 API Key 都不会上传到自建服务器。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = extras.textSecondary,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "以 GPL-3.0-or-later 协议开源。",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = extras.textTertiary,
+                )
+                Spacer(Modifier.height(4.dp))
+                TextButton(
+                    onClick = {
+                        runCatching {
+                            uriHandler.openUri("https://github.com/wangyifan20080208/date-notice")
+                        }
+                    },
+                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "查看源代码",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
             }
         }

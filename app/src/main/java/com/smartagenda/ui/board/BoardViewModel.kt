@@ -28,6 +28,9 @@ class BoardViewModel(
 
     private val selectedSource = MutableStateFlow<String?>(null)
     private val selectedTab = MutableStateFlow(BoardTab.PENDING)
+    private val searchQuery = MutableStateFlow("")
+
+    private val filters = combine(selectedSource, searchQuery) { source, query -> source to query }
 
     private val aiConfigured: StateFlow<Boolean> = settingsStore.settings
         .map { it.isConfigured }
@@ -41,17 +44,24 @@ class BoardViewModel(
     val uiState: StateFlow<BoardUiState> = combine(
         repository.allTasks,
         repository.sources,
-        selectedSource,
+        filters,
         selectedTab,
         aiConfigured,
-    ) { tasks, sources, source, tab, configured ->
+    ) { tasks, sources, filter, tab, configured ->
         val now = System.currentTimeMillis()
+        val (source, query) = filter
         val effectiveSource = source?.takeIf { it in sources }
-        val filtered = if (effectiveSource == null) {
-            tasks
-        } else {
-            tasks.filter { it.source == effectiveSource }
-        }
+        val keyword = query.trim()
+
+        val filtered = tasks
+            .filter { effectiveSource == null || it.source == effectiveSource }
+            .filter { task ->
+                keyword.isEmpty() ||
+                    task.title.contains(keyword, ignoreCase = true) ||
+                    task.source.contains(keyword, ignoreCase = true) ||
+                    task.location?.contains(keyword, ignoreCase = true) == true ||
+                    task.note?.contains(keyword, ignoreCase = true) == true
+            }
 
         val current = when (tab) {
             BoardTab.PENDING -> filtered.filter { it.status == TaskStatus.PENDING }
@@ -76,18 +86,7 @@ class BoardViewModel(
                 }
             }
 
-            BoardTab.DONE -> if (current.isEmpty()) {
-                emptyList()
-            } else {
-                listOf(
-                    TaskSectionGroup(
-                        key = "DONE",
-                        title = "已完成",
-                        hint = "按完成时间",
-                        tasks = current,
-                    ),
-                )
-            }
+            BoardTab.DONE -> doneGroups(current, now)
 
             BoardTab.DELETED -> if (current.isEmpty()) {
                 emptyList()
@@ -107,6 +106,7 @@ class BoardViewModel(
             groups = groups,
             sources = sources,
             selectedSource = effectiveSource,
+            query = query,
             tab = tab,
             pendingCount = tasks.count { it.status == TaskStatus.PENDING },
             doneCount = tasks.count { it.status == TaskStatus.DONE },
@@ -123,6 +123,39 @@ class BoardViewModel(
 
     fun selectTab(tab: BoardTab) {
         selectedTab.value = tab
+    }
+
+    fun updateQuery(query: String) {
+        searchQuery.value = query
+    }
+
+    fun clearQuery() {
+        searchQuery.value = ""
+    }
+
+    fun clearFilters() {
+        searchQuery.value = ""
+        selectedSource.value = null
+    }
+
+    fun createTask(
+        title: String,
+        datetime: Long?,
+        location: String,
+        source: String,
+    ) {
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isEmpty()) return
+        viewModelScope.launch {
+            repository.create(
+                title = trimmedTitle,
+                datetime = datetime,
+                source = source.trim().ifBlank { "手动创建" },
+                sourceApp = "MANUAL",
+                location = location.trim().ifBlank { null },
+            )
+            selectedTab.value = BoardTab.PENDING
+        }
     }
 
     fun completeTask(id: Long) {
@@ -180,7 +213,29 @@ class BoardViewModel(
         importJobStore.clearFinished()
     }
 
+    private fun doneGroups(tasks: List<TaskEntity>, now: Long): List<TaskSectionGroup> {
+        if (tasks.isEmpty()) return emptyList()
+        val buckets = tasks.groupBy { task ->
+            when (-TimeFormatter.dayOffset(task.updatedAt, now)) {
+                in Int.MIN_VALUE..0 -> "今天完成"
+                1 -> "昨天完成"
+                else -> "更早完成"
+            }
+        }
+        return listOf("今天完成", "昨天完成", "更早完成").mapNotNull { title ->
+            buckets[title]?.takeIf { it.isNotEmpty() }?.let { items ->
+                TaskSectionGroup(
+                    key = title,
+                    title = title,
+                    hint = null,
+                    tasks = items,
+                )
+            }
+        }
+    }
+
     private fun hintFor(section: TaskSection, tasks: List<TaskEntity>): String? = when (section) {
+        TaskSection.OVERDUE -> "已超过提醒时间"
         TaskSection.TODAY, TaskSection.TOMORROW ->
             tasks.firstOrNull { it.datetime != null }?.datetime?.let(TimeFormatter::formatDate)
 

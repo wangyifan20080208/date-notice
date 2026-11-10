@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,12 +28,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +45,7 @@ import com.smartagenda.data.local.TaskEntity
 import com.smartagenda.data.local.TaskStatus
 import com.smartagenda.ui.common.DateTimePickerDialog
 import com.smartagenda.ui.theme.LocalAgendaColors
+import kotlinx.coroutines.delay
 
 @Composable
 fun TaskDetailScreen(
@@ -129,6 +134,15 @@ fun TaskDetailContent(
     val extras = LocalAgendaColors.current
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmPurge by remember { mutableStateOf(false) }
+    var copied by remember { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
+
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1_500)
+            copied = false
+        }
+    }
 
     val done = task.status == TaskStatus.DONE
     val deleted = task.status == TaskStatus.DELETED
@@ -241,15 +255,47 @@ fun TaskDetailContent(
             HorizontalDivider(color = extras.hairline)
             Spacer(Modifier.height(16.dp))
 
-            MetaRow(label = "来源", value = "${task.source} · ${sourceAppLabel(task.sourceApp)}")
+            val appLabel = sourceAppLabel(task.sourceApp)
+            MetaRow(
+                label = "来源",
+                value = if (appLabel == task.source) task.source else "${task.source} · $appLabel",
+            )
             if (!task.location.isNullOrBlank()) {
                 Spacer(Modifier.height(10.dp))
                 MetaRow(label = "地点", value = task.location.orEmpty())
             }
             if (!task.note.isNullOrBlank()) {
                 Spacer(Modifier.height(10.dp))
-                MetaRow(label = "原文", value = task.note)
+                MetaRow(label = "原文", value = task.note.orEmpty())
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(
+                        onClick = {
+                            clipboard.setText(AnnotatedString(task.note.orEmpty()))
+                            copied = true
+                        },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = if (copied) "已复制" else "复制原文",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = extras.textTertiary,
+                        )
+                    }
+                }
             }
+            Spacer(Modifier.height(10.dp))
+            MetaRow(
+                label = "提醒",
+                value = when {
+                    task.datetime != null && !finished ->
+                        "将在 ${TimeFormatter.formatFull(task.datetime)} 提醒"
+                    task.datetime != null -> "提醒已取消"
+                    else -> "未设置提醒"
+                },
+            )
             Spacer(Modifier.height(10.dp))
             MetaRow(
                 label = "状态",

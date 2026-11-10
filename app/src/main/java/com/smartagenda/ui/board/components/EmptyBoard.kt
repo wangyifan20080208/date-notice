@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +28,10 @@ fun EmptyBoard(
     modifier: Modifier = Modifier,
     title: String = "还没有日程",
     description: String = "群里的会议、作业和集合通知，会被自动提取到这里。",
+    primaryLabel: String? = null,
+    onPrimary: (() -> Unit)? = null,
+    secondaryLabel: String? = null,
+    onSecondary: (() -> Unit)? = null,
 ) {
     val extras = LocalAgendaColors.current
 
@@ -62,5 +68,18 @@ fun EmptyBoard(
             color = extras.textSecondary,
             textAlign = TextAlign.Center,
         )
+
+        if (primaryLabel != null && onPrimary != null) {
+            Spacer(Modifier.size(20.dp))
+            Button(onClick = onPrimary) {
+                Text(primaryLabel)
+            }
+            if (secondaryLabel != null && onSecondary != null) {
+                Spacer(Modifier.size(4.dp))
+                TextButton(onClick = onSecondary) {
+                    Text(secondaryLabel, color = extras.textSecondary)
+                }
+            }
+        }
     }
 }
