@@ -5,6 +5,8 @@
 > 把微信 / QQ 群里的通知，变成手机上准时响起的日程提醒。  
 > 纯本地运行，群消息、日程与 API Key 都不离开手机。
 
+本项目基于 **GPL-3.0-or-later** 协议开源：可自由使用、修改与再分发；分发或衍生版本须同样以 GPL 协议公开对应源码，并保留版权与许可声明。
+
 ![看板](docs/screenshots/board.png)
 
 ---
@@ -545,9 +547,14 @@ API Key 会先用 Android Keystore 加密，再写入本机 DataStore。
 
 ---
 
-## 十三、许可证
+## 十三、开源与许可证
 
-本项目采用 **GNU General Public License v3.0 or later（GPL-3.0-or-later）**。
+本项目以开源方式发布，源码仓库：
+
+- GitHub：[wangyifan20080208/date-notice](https://github.com/wangyifan20080208/date-notice)
+- GitLab：[269009013/schedule](https://gitlab.jsnu.edu.cn/269009013/schedule)
+
+采用 **GNU General Public License v3.0 or later（GPL-3.0-or-later）**，属于强 copyleft 许可：任何分发或修改后的版本都必须以同一协议开放源代码，并保留原始版权与许可声明。
 
 Copyright (C) 2026 269009013
 
