@@ -31,10 +31,3 @@ data class BoardUiState(
     val isEmpty: Boolean get() = !isLoading && totalCount == 0
     val hasActiveFilter: Boolean get() = selectedSource != null || query.isNotBlank()
 }
-
-data class ManualImportUiState(
-    val visible: Boolean = false,
-    val source: String = "手动导入",
-    val content: String = "",
-    val error: String? = null,
-)

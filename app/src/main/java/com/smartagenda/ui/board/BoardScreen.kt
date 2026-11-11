@@ -77,8 +77,8 @@ import com.smartagenda.ui.common.BannerTone
 import com.smartagenda.ui.common.DateTimePickerDialog
 import com.smartagenda.ui.common.ImportHistoryDialog
 import com.smartagenda.ui.common.InlineBanner
-import com.smartagenda.ui.common.ManualImportDialog
-import com.smartagenda.ui.common.NewTaskDialog
+import com.smartagenda.ui.common.AddMode
+import com.smartagenda.ui.common.AddTaskDialog
 import com.smartagenda.ui.detail.TaskDetailScreen
 import com.smartagenda.ui.detail.TaskDetailViewModel
 import com.smartagenda.ui.theme.LocalAgendaColors
@@ -102,10 +102,9 @@ fun BoardRoute(
         },
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val importState by viewModel.importState.collectAsStateWithLifecycle()
     val importJobs by viewModel.importJobs.collectAsStateWithLifecycle()
     var showImportHistory by remember { mutableStateOf(false) }
-    var showNewTask by remember { mutableStateOf(false) }
+    var addMode by remember { mutableStateOf<AddMode?>(null) }
     var searchVisible by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -160,7 +159,7 @@ fun BoardRoute(
                     postNotificationsGranted = postNotificationsGranted,
                     onSelectSource = viewModel::selectSource,
                     onSelectTab = viewModel::selectTab,
-                    onOpenImport = viewModel::openImport,
+                    onOpenImport = { addMode = AddMode.MANUAL },
                     importJobs = importJobs,
                     onOpenImportHistory = { showImportHistory = true },
                     onTaskClick = { task -> selectedTaskId = task.id },
@@ -170,7 +169,7 @@ fun BoardRoute(
                     onDelete = deleteWithUndo,
                     onRestore = viewModel::restoreTask,
                     onOpenSettings = onOpenSettings,
-                    onNewTask = { showNewTask = true },
+                    onNewTask = { addMode = AddMode.AI },
                     onClearFilters = viewModel::clearFilters,
                     searchVisible = searchVisible,
                     onToggleSearch = {
@@ -230,7 +229,7 @@ fun BoardRoute(
                 postNotificationsGranted = postNotificationsGranted,
                 onSelectSource = viewModel::selectSource,
                 onSelectTab = viewModel::selectTab,
-                onOpenImport = viewModel::openImport,
+                onOpenImport = { addMode = AddMode.MANUAL },
                 importJobs = importJobs,
                 onOpenImportHistory = { showImportHistory = true },
                 onTaskClick = onTaskClick,
@@ -240,7 +239,7 @@ fun BoardRoute(
                 onDelete = deleteWithUndo,
                 onRestore = viewModel::restoreTask,
                 onOpenSettings = onOpenSettings,
-                onNewTask = { showNewTask = true },
+                onNewTask = { addMode = AddMode.AI },
                 onClearFilters = viewModel::clearFilters,
                 searchVisible = searchVisible,
                 onToggleSearch = {
@@ -273,25 +272,17 @@ fun BoardRoute(
         )
     }
 
-    if (importState.visible) {
-        ManualImportDialog(
-            state = importState,
+    val mode = addMode
+    if (mode != null) {
+        AddTaskDialog(
+            initialMode = mode,
             sources = state.sources,
-            onSourceChange = viewModel::updateImportSource,
-            onContentChange = viewModel::updateImportContent,
-            onDismiss = viewModel::dismissImport,
-            onSubmit = viewModel::submitImport,
-        )
-    }
-
-    if (showNewTask) {
-        NewTaskDialog(
-            sources = state.sources,
-            onDismiss = { showNewTask = false },
-            onConfirm = { title, datetime, location, source ->
+            aiConfigured = state.aiConfigured,
+            onDismiss = { addMode = null },
+            onCreate = { title, datetime, location, source ->
                 viewModel.createTask(title, datetime, location, source)
-                showNewTask = false
             },
+            onParse = { source, content -> viewModel.submitImport(source, content) },
         )
     }
 
@@ -380,7 +371,7 @@ private fun BoardContent(
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        text = "导入",
+                        text = "添加",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -494,9 +485,9 @@ private fun BoardContent(
                     state.tab == BoardTab.PENDING -> EmptyBoard(
                         title = "还没有日程",
                         description = "群里的会议、作业和集合通知，会被自动提取到这里。",
-                        primaryLabel = "导入群消息",
+                        primaryLabel = "添加日程",
                         onPrimary = onOpenImport,
-                        secondaryLabel = "手动新建",
+                        secondaryLabel = "粘贴群消息",
                         onSecondary = onNewTask,
                         modifier = Modifier.weight(1f),
                     )
@@ -560,7 +551,7 @@ private fun BoardContent(
         }
 
         FloatingActionButton(
-            onClick = onNewTask,
+            onClick = onOpenImport,
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
@@ -569,7 +560,7 @@ private fun BoardContent(
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = "新建日程",
+                contentDescription = "添加日程",
             )
         }
     }

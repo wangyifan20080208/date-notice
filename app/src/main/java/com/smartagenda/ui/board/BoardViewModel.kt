@@ -36,9 +36,6 @@ class BoardViewModel(
         .map { it.isConfigured }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    private val _importState = MutableStateFlow(ManualImportUiState())
-    val importState: StateFlow<ManualImportUiState> = _importState.asStateFlow()
-
     val importJobs: StateFlow<List<ImportJob>> = importJobStore.jobs
 
     val uiState: StateFlow<BoardUiState> = combine(
@@ -178,35 +175,12 @@ class BoardViewModel(
         viewModelScope.launch { repository.setTime(id, datetime) }
     }
 
-    fun openImport() {
-        _importState.update { it.copy(visible = true, error = null) }
-    }
+    fun submitImport(source: String, content: String): String? {
+        if (content.isBlank()) return "请先粘贴消息内容"
+        if (!aiConfigured.value) return "请先在设置里配置大模型"
 
-    fun dismissImport() {
-        _importState.update { it.copy(visible = false) }
-    }
-
-    fun updateImportSource(value: String) {
-        _importState.update { it.copy(source = value, error = null) }
-    }
-
-    fun updateImportContent(value: String) {
-        _importState.update { it.copy(content = value, error = null) }
-    }
-
-    fun submitImport() {
-        val state = _importState.value
-        if (state.content.isBlank()) {
-            _importState.update { it.copy(error = "请先粘贴消息内容") }
-            return
-        }
-        if (!aiConfigured.value) {
-            _importState.update { it.copy(error = "请先在设置里配置大模型") }
-            return
-        }
-
-        importJobStore.enqueue(state.source, state.content)
-        _importState.value = ManualImportUiState()
+        importJobStore.enqueue(source, content)
+        return null
     }
 
     fun clearImportHistory() {
