@@ -38,7 +38,6 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -359,21 +358,14 @@ private fun BoardContent(
                         color = extras.textSecondary,
                     )
                 }
-                IconButton(onClick = onToggleSearch) {
+                IconButton(
+                    onClick = onToggleSearch,
+                    modifier = Modifier.padding(end = 8.dp),
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = if (searchVisible) "关闭搜索" else "搜索",
                         tint = extras.textSecondary,
-                    )
-                }
-                TextButton(
-                    onClick = onOpenImport,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                ) {
-                    Text(
-                        text = "添加",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
