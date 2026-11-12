@@ -213,7 +213,7 @@ private fun SettingsScreen(
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            text = "关闭后只记录消息，不调用大模型。",
+                            text = "关闭后不再解析新消息，已创建的日程不受影响。",
                             style = MaterialTheme.typography.bodyMedium,
                             color = extras.textSecondary,
                         )
