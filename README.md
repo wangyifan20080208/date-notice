@@ -1,4 +1,4 @@
-# 智能群消息日程助手（SmartGroupAgenda）
+# 智能消息日程助手（SmartGroupAgenda）
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
